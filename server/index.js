@@ -15,11 +15,13 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'", "https://api.nb.no"]
     }
-  }
+  },
+  crossOriginOpenerPolicy: false
 }));
 
 // Rate limiting
@@ -46,13 +48,21 @@ const apiRoutes = require('./routes/api');
 // Routes
 app.use('/api', apiRoutes);
 
+// Serve static files
+const path = require('path');
+app.use(express.static('public'));
+
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  const path = require('path');
   app.use(express.static('client/build'));
   
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  });
+} else {
+  // In development, serve our test page
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 }
 
